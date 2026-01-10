@@ -3,12 +3,20 @@
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
 import Image from "next/image";
+import SettingsModal from "@/components/SettingsModal";
 
 export default function Header() {
   const { data: session } = useSession();
   const [showMenu, setShowMenu] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   if (!session?.user) return null;
+
+  // show setting modal
+  const handleSettingsSuccess = async () => {
+    setShowSettings(false);
+    await loadData();
+  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -63,6 +71,7 @@ export default function Header() {
                   onClick={() => setShowMenu(false)}
                 />
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-20 border border-gray-200">
+                  {/* current user name */}
                   <div className="px-4 py-2 border-b border-gray-200">
                     <p className="text-sm font-medium text-gray-900">
                       {session.user.name}
@@ -71,6 +80,14 @@ export default function Header() {
                       {session.user.email}
                     </p>
                   </div>
+                  {/* settings button */}
+                  <button
+                    onClick={() => setShowSettings(true)}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-slate-50 transition-colors"
+                  >
+                    Settings
+                  </button>
+                  {/* sign out button */}
                   <button
                     onClick={() => signOut({ callbackUrl: "/auth/signin" })}
                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -79,6 +96,13 @@ export default function Header() {
                   </button>
                 </div>
               </>
+            )}
+
+            {showSettings && (
+              <SettingsModal
+                onSuccess={handleSettingsSuccess}
+                onCancel={() => setShowSettings(false)}
+              />
             )}
           </div>
         </div>

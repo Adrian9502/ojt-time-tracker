@@ -9,7 +9,6 @@ import { formatHours } from "@/lib/utils";
 import EntryForm from "@/components/EntryForm";
 import TaskTable from "@/components/TaskTable";
 import Header from "@/components/Header";
-import SettingsModal from "@/components/SettingsModal";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -24,7 +23,6 @@ export default function Home() {
   const [entries, setEntries] = useState<OJTEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [editingEntry, setEditingEntry] = useState<OJTEntry | undefined>();
 
   useEffect(() => {
@@ -119,11 +117,6 @@ export default function Home() {
     await loadData();
   };
 
-  const handleSettingsSuccess = async () => {
-    setShowSettings(false);
-    await loadData();
-  };
-
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -139,7 +132,7 @@ export default function Home() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header Section */}
           <div className="mb-6">
@@ -202,7 +195,7 @@ export default function Home() {
             </div>
             <div className="w-full bg-gray-100 rounded-full h-2">
               <div
-                className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
+                className="bg-linear-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
                 style={{ width: `${stats.progressPercentage}%` }}
               />
             </div>
@@ -216,12 +209,7 @@ export default function Home() {
             >
               + Add Task
             </button>
-            <button
-              onClick={() => setShowSettings(true)}
-              className="px-5 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors border border-gray-200 shadow-sm"
-            >
-              ⚙️ Settings
-            </button>
+
             <button className="px-5 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors border border-gray-200 shadow-sm">
               📊 Export
             </button>
@@ -242,13 +230,6 @@ export default function Home() {
               setShowForm(false);
               setEditingEntry(undefined);
             }}
-          />
-        )}
-
-        {showSettings && (
-          <SettingsModal
-            onSuccess={handleSettingsSuccess}
-            onCancel={() => setShowSettings(false)}
           />
         )}
       </div>
