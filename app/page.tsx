@@ -25,6 +25,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState<OJTEntry | undefined>();
+  const [editingTaskId, setEditingTaskId] = useState<string | undefined>();
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -69,6 +70,13 @@ export default function Home() {
 
   const handleAddEntry = () => {
     setEditingEntry(undefined);
+    setEditingTaskId(undefined);
+    setShowForm(true);
+  };
+
+  const handleEditTask = (entry: OJTEntry, taskId: string) => {
+    setEditingEntry(entry);
+    setEditingTaskId(taskId);
     setShowForm(true);
   };
 
@@ -128,8 +136,8 @@ export default function Home() {
   const handleFormSuccess = async () => {
     setShowForm(false);
     setEditingEntry(undefined);
+    setEditingTaskId(undefined);
     await loadData();
-    toast.success("Tasks saved successfully!");
   };
 
   if (status === "loading" || loading) {
@@ -234,7 +242,11 @@ export default function Home() {
 
           {/* Main Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <TaskTable entries={entries} onDeleteTask={handleDeleteTask} />
+            <TaskTable
+              entries={entries}
+              onDeleteTask={handleDeleteTask}
+              onEditTask={handleEditTask}
+            />
           </div>
         </div>
 
@@ -242,10 +254,12 @@ export default function Home() {
         {showForm && (
           <EntryForm
             entry={editingEntry}
+            taskId={editingTaskId}
             onSuccess={handleFormSuccess}
             onCancel={() => {
               setShowForm(false);
               setEditingEntry(undefined);
+              setEditingTaskId(undefined);
             }}
           />
         )}

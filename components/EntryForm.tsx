@@ -1,141 +1,184 @@
 "use client";
 
-import { useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { OJTEntry } from "@/lib/types";
 import { CATEGORIES } from "@/lib/constants";
 import { calculateHours } from "@/lib/utils";
+import { toast } from "react-toastify";
 
 interface EntryFormProps {
   entry?: OJTEntry;
+  taskId?: string;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-interface TaskFormData {
-  timeIn: string;
-  timeOut: string;
-  hoursRendered: number;
-  taskName: string;
-  category: string;
-  status: string;
-}
-
 interface FormData {
   date: string;
-  supervisor: string;
+  timeIn: string;
+  timeOut: string;
+  taskName: string;
+  category: string;
   notes?: string;
-  tasks: TaskFormData[];
 }
 
 export default function EntryForm({
   entry,
+  taskId,
   onSuccess,
   onCancel,
 }: EntryFormProps) {
   const [loading, setLoading] = useState(false);
+  const [hoursRendered, setHoursRendered] = useState(0);
+
+  const isEditMode = !!entry && !!taskId;
+  const editingTask = isEditMode
+    ? entry?.tasks.find((t) => t.id === taskId)
+    : null;
 
   const {
     register,
-    control,
     handleSubmit,
     watch,
-    setValue,
     formState: { errors },
   } = useForm<FormData>({
-    defaultValues: entry
-      ? {
-          date: new Date(entry.date).toISOString().split("T")[0],
-          supervisor: entry.supervisor,
-          notes: entry.notes || "",
-          tasks: entry.tasks.map((task) => ({
-            timeIn: task.timeIn,
-            timeOut: task.timeOut,
-            hoursRendered: task.hoursRendered,
-            taskName: task.taskName,
-            category: task.category,
-            status: "Completed",
-          })),
-        }
-      : {
-          date: new Date().toISOString().split("T")[0],
-          supervisor: "",
-          notes: "",
-          tasks: [
-            {
-              timeIn: "",
-              timeOut: "",
-              hoursRendered: 0,
-              taskName: "",
-              category: "",
-              status: "Completed",
-            },
-          ],
-        },
+    defaultValues:
+      isEditMode && editingTask
+        ? {
+            date: new Date(entry.date).toISOString().split("T")[0],
+            timeIn: editingTask.timeIn,
+            timeOut: editingTask.timeOut,
+            taskName: editingTask.taskName,
+            category: editingTask.category,
+            notes: entry.notes || "",
+          }
+        : {
+            date: new Date().toISOString().split("T")[0],
+            timeIn: "",
+            timeOut: "",
+            taskName: "",
+            category: "",
+            notes: "",
+          },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "tasks",
-  });
+  const timeIn = watch("timeIn");
+  const timeOut = watch("timeOut");
 
-  const tasks = watch("tasks");
-
-  const handleTimeChange = (index: number) => {
-    const task = tasks[index];
-    if (task.timeIn && task.timeOut) {
-      const hours = calculateHours(task.timeIn, task.timeOut);
-      setValue(`tasks.${index}.hoursRendered`, hours);
+  useEffect(() => {
+    if (timeIn && timeOut) {
+      const hours = calculateHours(timeIn, timeOut);
+      setHoursRendered(hours);
     }
-  };
-
-  const totalHours = tasks.reduce(
-    (sum, task) => sum + (task.hoursRendered || 0),
-    0
-  );
+  }, [timeIn, timeOut]);
 
   const onSubmit = async (data: FormData) => {
+    if (hoursRendered <= 0) {
+      toast.error("Please enter valid time in and time out");
+      return;
+    }
+
     setLoading(true);
     try {
-      const url = entry ? `/api/entries/${entry.id}` : "/api/entries";
-      const method = entry ? "PUT" : "POST";
+      if (isEditMode && entry) {
+        // Edit existing task
+        const updatedTasks = entry.tasks.map((task) =>
+          task.id === taskId
+            ? {
+                timeIn: data.timeIn,
+                timeOut: data.timeOut,
+                hoursRendered,
+                taskName: data.taskName,
+                category: data.category,
+                status: "Completed",
+              }
+            : {
+                timeIn: task.timeIn,
+                timeOut: task.timeOut,
+                hoursRendered: task.hoursRendered,
+                taskName: task.taskName,
+                category: task.category,
+                status: task.status,
+              }
+        );
 
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+        const response = await fetch(`/api/entries/${entry.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            date: data.date,
+            supervisor: entry.supervisor,
+            notes: data.notes,
+            tasks: updatedTasks,
+          }),
+        });
 
-      if (!response.ok) throw new Error("Failed to save entry");
+        if (!response.ok) throw new Error("Failed to update task");
+        toast.success("Task updated successfully!");
+      } else {
+        // Create new task
+        const response = await fetch("/api/entries", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            date: data.date,
+            supervisor: "N/A",
+            notes: data.notes,
+            tasks: [
+              {
+                timeIn: data.timeIn,
+                timeOut: data.timeOut,
+                hoursRendered,
+                taskName: data.taskName,
+                category: data.category,
+                status: "Completed",
+              },
+            ],
+          }),
+        });
+
+        if (!response.ok) throw new Error("Failed to save task");
+        toast.success("Task added successfully!");
+      }
 
       onSuccess();
     } catch (error) {
-      console.error("Error saving entry:", error);
-      alert("Failed to save entry. Please try again.");
+      console.error("Error saving task:", error);
+      toast.error("Failed to save task. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full my-8">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full my-8">
         <div className="p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            {entry ? "Edit Tasks" : "Add New Tasks"}
-          </h2>
+          {/* Header */}
+          <div className="mb-6 pb-4 border-b border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {isEditMode ? "Edit Task" : "Add New Task"}
+            </h2>
+            <p className="text-gray-500 text-sm mt-1">
+              {isEditMode
+                ? "Update your task details"
+                : "Record your training activity"}
+            </p>
+          </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Date & Supervisor */}
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-5">
+            {/* Row 1: Date and Time */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Date */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Date *
                 </label>
                 <input
                   type="date"
                   {...register("date", { required: "Date is required" })}
-                  className="w-full px-3 py-2 border border-gray-300 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full text-sm px-3 py-2.5 border border-gray-300 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
                 {errors.date && (
                   <p className="text-red-500 text-xs mt-1">
@@ -144,194 +187,158 @@ export default function EntryForm({
                 )}
               </div>
 
+              {/* Time In */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Supervisor/Mentor *
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Time In *
                 </label>
                 <input
-                  type="text"
-                  {...register("supervisor", {
-                    required: "Supervisor is required",
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Supervisor name"
+                  type="time"
+                  {...register("timeIn", { required: "Time in is required" })}
+                  className="w-full text-sm px-3 py-2.5 border border-gray-300 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
-                {errors.supervisor && (
+                {errors.timeIn && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.supervisor.message}
+                    {errors.timeIn.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Time Out */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Time Out *
+                </label>
+                <input
+                  type="time"
+                  {...register("timeOut", {
+                    required: "Time out is required",
+                  })}
+                  className="w-full text-sm px-3 py-2.5 border border-gray-300 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+                {errors.timeOut && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.timeOut.message}
                   </p>
                 )}
               </div>
             </div>
 
-            {/* Tasks */}
-            <div className="border-t pt-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-semibold text-gray-900">Tasks</h3>
-                <button
-                  type="button"
-                  onClick={() =>
-                    append({
-                      timeIn: "",
-                      timeOut: "",
-                      hoursRendered: 0,
-                      taskName: "",
-                      category: "",
-                      status: "Completed",
-                    })
-                  }
-                  className="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700"
-                >
-                  + Add Task
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {fields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="border border-gray-200 rounded-lg p-4 bg-gray-50"
-                  >
-                    <div className="flex justify-between mb-3">
-                      <span className="text-xs font-medium text-gray-600">
-                        Task #{index + 1}
-                      </span>
-                      {fields.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => remove(index)}
-                          className="text-red-600 hover:text-red-800 text-xs font-medium"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      {/* Time In/Out */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-xs text-gray-600 mb-1">
-                            Time In *
-                          </label>
-                          <input
-                            type="time"
-                            {...register(`tasks.${index}.timeIn`, {
-                              required: "Required",
-                              onChange: () => handleTimeChange(index),
-                            })}
-                            className="w-full px-2 py-1.5 text-sm border border-gray-300 text-slate-900 rounded focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-600 mb-1">
-                            Time Out *
-                          </label>
-                          <input
-                            type="time"
-                            {...register(`tasks.${index}.timeOut`, {
-                              required: "Required",
-                              onChange: () => handleTimeChange(index),
-                            })}
-                            className="w-full px-2 py-1.5 text-sm border border-gray-300 text-slate-900 rounded focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Hours */}
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Hours
-                        </label>
-                        <div className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded font-semibold text-sm">
-                          {tasks[index].hoursRendered.toFixed(2)} hrs
-                        </div>
-                      </div>
-
-                      {/* Task Name */}
-                      <div className="col-span-2">
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Task Description *
-                        </label>
-                        <input
-                          type="text"
-                          {...register(`tasks.${index}.taskName`, {
-                            required: "Required",
-                          })}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 text-slate-900 rounded focus:ring-2 focus:ring-blue-500"
-                          placeholder="What did you work on?"
-                        />
-                      </div>
-
-                      {/* Category */}
-                      <div className="col-span-2">
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Category *
-                        </label>
-                        <select
-                          {...register(`tasks.${index}.category`, {
-                            required: "Required",
-                          })}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 text-slate-900 rounded focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="">Select category...</option>
-                          {CATEGORIES.map((cat) => (
-                            <option key={cat} value={cat}>
-                              {cat}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
+            {/* Hours Display */}
+            {hoursRendered > 0 && (
+              <div className="bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-5 h-5 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium text-gray-700">
+                      Total Hours
+                    </span>
                   </div>
-                ))}
-              </div>
-
-              {/* Total Hours */}
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-700">
-                    Total Hours:
-                  </span>
-                  <span className="text-xl font-bold text-blue-600">
-                    {totalHours.toFixed(2)} hrs
+                  <span className="text-2xl font-bold text-blue-600">
+                    {hoursRendered.toFixed(2)} hrs
                   </span>
                 </div>
               </div>
+            )}
+
+            {/* Row 2: Task and Category */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Task Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Task Description *
+                </label>
+                <input
+                  type="text"
+                  {...register("taskName", {
+                    required: "Task description is required",
+                  })}
+                  className="w-full px-3 py-2.5 border border-gray-300 text-slate-900 rounded-lg focus:outline-none text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="What did you work on?"
+                />
+                {errors.taskName && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.taskName.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Category *
+                </label>
+                <select
+                  {...register("category", {
+                    required: "Category is required",
+                  })}
+                  className="w-full px-3 py-2.5 border border-gray-300 text-slate-900 rounded-lg focus:outline-none text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                >
+                  <option value="">Select a category...</option>
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                {errors.category && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.category.message}
+                  </p>
+                )}
+              </div>
             </div>
 
-            {/* Learning Outcome */}
+            {/* Learning Outcome - Full Width */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Learning Outcome / Notes
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Learning Outcome{" "}
+                <span className="text-gray-400 text-xs">(Optional)</span>
               </label>
               <textarea
                 {...register("notes")}
                 rows={3}
-                className="w-full px-3 py-2 border text-slate-900 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full text-sm px-3 py-2.5 border border-gray-300 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
                 placeholder="What did you learn? Any insights or observations..."
               />
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 pt-4 border-t">
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {loading ? "Saving..." : entry ? "Update Tasks" : "Save Tasks"}
-              </button>
+            <div className="flex gap-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onCancel}
                 disabled={loading}
-                className="px-6 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 disabled:cursor-not-allowed transition-colors"
               >
                 Cancel
               </button>
+              <button
+                type="button"
+                onClick={handleSubmit(onSubmit)}
+                disabled={loading}
+                className="flex-1 px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-sm hover:shadow-md"
+              >
+                {loading
+                  ? "Saving..."
+                  : isEditMode
+                  ? "Update Task"
+                  : "Save Task"}
+              </button>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>

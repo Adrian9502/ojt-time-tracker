@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 interface TaskTableProps {
   entries: OJTEntry[];
   onDeleteTask: (entryId: string, taskId: string) => void;
+  onEditTask: (entry: OJTEntry, taskId: string) => void;
 }
 
 interface FlatTask {
@@ -23,9 +24,14 @@ interface FlatTask {
   status: string;
   learningOutcome: string;
   isFirstOfDate: boolean;
+  supervisor: string;
 }
 
-export default function TaskTable({ entries, onDeleteTask }: TaskTableProps) {
+export default function TaskTable({
+  entries,
+  onDeleteTask,
+  onEditTask,
+}: TaskTableProps) {
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     entryId: string;
@@ -58,6 +64,7 @@ export default function TaskTable({ entries, onDeleteTask }: TaskTableProps) {
         status: task.status,
         learningOutcome: entry.notes || "-",
         isFirstOfDate: index === 0,
+        supervisor: entry.supervisor,
       });
     });
   });
@@ -73,6 +80,13 @@ export default function TaskTable({ entries, onDeleteTask }: TaskTableProps) {
       taskId,
       taskName,
     });
+  };
+
+  const handleEditClick = (entryId: string, taskId: string) => {
+    const entry = entries.find((e) => e.id === entryId);
+    if (entry) {
+      onEditTask(entry, taskId);
+    }
   };
 
   const handleConfirmDelete = () => {
@@ -168,18 +182,26 @@ export default function TaskTable({ entries, onDeleteTask }: TaskTableProps) {
 
                 {/* Actions */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <button
-                    onClick={() =>
-                      handleDeleteClick(
-                        task.entryId,
-                        task.taskId,
-                        task.taskName
-                      )
-                    }
-                    className="text-red-600 hover:text-red-800 font-medium"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleEditClick(task.entryId, task.taskId)}
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleDeleteClick(
+                          task.entryId,
+                          task.taskId,
+                          task.taskName
+                        )
+                      }
+                      className="text-red-600 hover:text-red-800 font-medium"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

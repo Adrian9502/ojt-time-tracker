@@ -1,7 +1,8 @@
 import { Category, Status } from "./types";
 
 export const CATEGORIES: Category[] = [
-  "Training",
+  "Learning",
+  "Development/Coding",
   "Project Work",
   "Admin",
   "Meeting",
