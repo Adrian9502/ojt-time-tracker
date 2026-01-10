@@ -35,14 +35,6 @@ export default function SettingsModal({
           const settings = await response.json();
           setValue("requiredHours", settings.requiredHours);
           setValue("studentName", settings.studentName);
-          setValue(
-            "startDate",
-            new Date(settings.startDate).toISOString().split("T")[0]
-          );
-          setValue(
-            "endDate",
-            new Date(settings.endDate).toISOString().split("T")[0]
-          );
         }
       } catch (error) {
         console.error("Failed to load settings:", error);
@@ -88,7 +80,7 @@ export default function SettingsModal({
 
   if (initialLoading) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
           <div className="flex flex-col items-center justify-center py-32">
             <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
@@ -100,7 +92,7 @@ export default function SettingsModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
         <div className="p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4 text-center">

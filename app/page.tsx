@@ -9,6 +9,7 @@ import { formatHours } from "@/lib/utils";
 import EntryForm from "@/components/EntryForm";
 import TaskTable from "@/components/TaskTable";
 import Header from "@/components/Header";
+import { toast } from "react-toastify";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -54,6 +55,7 @@ export default function Home() {
       setStats(calculatedStats);
     } catch (error) {
       console.error("Failed to load data:", error);
+      toast.error("Failed to load data. Please refresh the page.");
     } finally {
       setLoading(false);
     }
@@ -80,7 +82,11 @@ export default function Home() {
         const response = await fetch(`/api/entries/${entryId}`, {
           method: "DELETE",
         });
-        if (!response.ok) throw new Error("Failed to delete entry");
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to delete entry");
+        }
       } else {
         // Remove the task and update the entry
         const updatedTasks = entry.tasks.filter((t) => t.id !== taskId);
@@ -101,13 +107,21 @@ export default function Home() {
             })),
           }),
         });
-        if (!response.ok) throw new Error("Failed to update entry");
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to update entry");
+        }
       }
 
       await loadData();
     } catch (error) {
       console.error("Error deleting task:", error);
-      alert("Failed to delete task. Please try again.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete task. Please try again."
+      );
     }
   };
 
@@ -115,12 +129,16 @@ export default function Home() {
     setShowForm(false);
     setEditingEntry(undefined);
     await loadData();
+    toast.success("Tasks saved successfully!");
   };
 
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          <p className="text-gray-600 mt-4">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -209,7 +227,6 @@ export default function Home() {
             >
               + Add Task
             </button>
-
             <button className="px-5 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors border border-gray-200 shadow-sm">
               📊 Export
             </button>

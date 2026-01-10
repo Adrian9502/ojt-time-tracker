@@ -20,7 +20,7 @@ interface EntryInput {
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -37,8 +37,11 @@ export async function PUT(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Await params
+    const { id } = await params;
+
     const existingEntry = await prisma.oJTEntry.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingEntry || existingEntry.userId !== user.id) {
@@ -52,12 +55,13 @@ export async function PUT(
       0
     );
 
+    // Delete existing tasks first
     await prisma.task.deleteMany({
-      where: { entryId: params.id },
+      where: { entryId: id },
     });
 
     const entry = await prisma.oJTEntry.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         date: new Date(body.date),
         supervisor: body.supervisor,
@@ -91,7 +95,7 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -108,8 +112,11 @@ export async function DELETE(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Await params
+    const { id } = await params;
+
     const existingEntry = await prisma.oJTEntry.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingEntry || existingEntry.userId !== user.id) {
@@ -117,7 +124,7 @@ export async function DELETE(
     }
 
     await prisma.oJTEntry.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });
