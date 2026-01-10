@@ -11,8 +11,6 @@ interface SettingsModalProps {
 interface SettingsFormData {
   requiredHours: number;
   studentName: string;
-  startDate: string;
-  endDate: string;
 }
 
 export default function SettingsModal({
@@ -30,36 +28,35 @@ export default function SettingsModal({
   } = useForm<SettingsFormData>();
 
   useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
-    try {
-      const response = await fetch("/api/settings");
-      if (response.ok) {
-        const settings = await response.json();
-        setValue("requiredHours", settings.requiredHours);
-        setValue("studentName", settings.studentName);
-        setValue(
-          "startDate",
-          new Date(settings.startDate).toISOString().split("T")[0]
-        );
-        setValue(
-          "endDate",
-          new Date(settings.endDate).toISOString().split("T")[0]
-        );
+    const loadSettings = async () => {
+      try {
+        const response = await fetch("/api/settings");
+        if (response.ok) {
+          const settings = await response.json();
+          setValue("requiredHours", settings.requiredHours);
+          setValue("studentName", settings.studentName);
+          setValue(
+            "startDate",
+            new Date(settings.startDate).toISOString().split("T")[0]
+          );
+          setValue(
+            "endDate",
+            new Date(settings.endDate).toISOString().split("T")[0]
+          );
+        }
+      } catch (error) {
+        console.error("Failed to load settings:", error);
+      } finally {
+        setInitialLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to load settings:", error);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
+    };
+
+    loadSettings();
+  }, [setValue]);
 
   const onSubmit = async (data: SettingsFormData) => {
     setLoading(true);
     try {
-      // Ensure requiredHours is a number
       const payload = {
         ...data,
         requiredHours: Number(data.requiredHours),
@@ -92,8 +89,11 @@ export default function SettingsModal({
   if (initialLoading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-xl p-6">
-          <div className="text-gray-600">Loading...</div>
+        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+          <div className="flex flex-col items-center justify-center py-32">
+            <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            <p className="text-gray-600 mt-4">Loading settings...</p>
+          </div>
         </div>
       </div>
     );
@@ -103,9 +103,11 @@ export default function SettingsModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
         <div className="p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">OJT Settings</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4 text-center">
+            OJT Settings
+          </h2>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-4">
             {/* Required Hours */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -150,7 +152,7 @@ export default function SettingsModal({
             </div>
 
             {/* Date Range */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Start Date *
@@ -184,12 +186,13 @@ export default function SettingsModal({
                   </p>
                 )}
               </div>
-            </div>
+            </div> */}
 
             {/* Actions */}
             <div className="flex gap-3 pt-4">
               <button
-                type="submit"
+                type="button"
+                onClick={handleSubmit(onSubmit)}
                 disabled={loading}
                 className="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
@@ -204,7 +207,7 @@ export default function SettingsModal({
                 Cancel
               </button>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>
