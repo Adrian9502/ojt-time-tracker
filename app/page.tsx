@@ -9,6 +9,7 @@ import { formatHours } from "@/lib/utils";
 import EntryForm from "@/components/EntryForm";
 import TaskTable from "@/components/TaskTable";
 import Header from "@/components/Header";
+import NotesSection from "@/components/NotesSection";
 import { toast } from "react-toastify";
 
 export default function Home() {
@@ -85,7 +86,6 @@ export default function Home() {
       const entry = entries.find((e) => e.id === entryId);
       if (!entry) return;
 
-      // If only one task, delete the entire entry
       if (entry.tasks.length === 1) {
         const response = await fetch(`/api/entries/${entryId}`, {
           method: "DELETE",
@@ -96,7 +96,6 @@ export default function Home() {
           throw new Error(error.error || "Failed to delete entry");
         }
       } else {
-        // Remove the task and update the entry
         const updatedTasks = entry.tasks.filter((t) => t.id !== taskId);
         const response = await fetch(`/api/entries/${entryId}`, {
           method: "PUT",
@@ -158,7 +157,7 @@ export default function Home() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header Section */}
           <div className="mb-6">
@@ -208,6 +207,9 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          {/* Notes Section */}
+          <NotesSection />
 
           {/* Progress Bar - Compact */}
           <div className="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-100">

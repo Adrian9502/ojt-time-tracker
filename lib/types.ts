@@ -48,3 +48,13 @@ export interface OJTStats {
   progressPercentage: number;
   entriesCount: number;
 }
+
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  type: "regular" | "ooo";
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
