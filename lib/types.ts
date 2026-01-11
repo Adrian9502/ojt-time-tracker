@@ -1,10 +1,12 @@
 export type Category =
-  | "Training"
+  | "Learning"
+  | "Development/Coding"
   | "Project Work"
   | "Admin"
   | "Meeting"
   | "Research"
   | "Documentation";
+
 export type Status =
   | "Completed"
   | "In Progress"
@@ -37,8 +39,6 @@ export interface OJTEntry {
 export interface OJTSettings {
   requiredHours: number;
   studentName: string;
-  startDate: Date;
-  endDate: Date;
 }
 
 export interface OJTStats {
