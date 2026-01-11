@@ -2,7 +2,7 @@
 
 A modern web application for tracking On-the-Job Training (OJT) hours. Built with Next.js, this application helps students and trainees manage their training hours, tasks, and progress towards completion requirements.
 
-![OJT Time Tracker Screenshot]("Screenshot From 2026-01-11 09-54-00.png")
+![OJT Time Tracker Screenshot](screenshot.png)
 
 ## ✨ Features
 
