@@ -3,19 +3,22 @@
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import SettingsModal from "@/components/SettingsModal";
 
 export default function Header() {
   const { data: session } = useSession();
+  const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
   if (!session?.user) return null;
 
   // show setting modal
-  const handleSettingsSuccess = async () => {
+  const handleSettingsSuccess = () => {
     setShowSettings(false);
-    await loadData();
+    // Refresh the page to reload data with new settings
+    router.refresh();
   };
 
   return (
@@ -82,7 +85,10 @@ export default function Header() {
                   </div>
                   {/* settings button */}
                   <button
-                    onClick={() => setShowSettings(true)}
+                    onClick={() => {
+                      setShowSettings(true);
+                      setShowMenu(false);
+                    }}
                     className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-slate-50 transition-colors"
                   >
                     Settings
