@@ -39,7 +39,7 @@ export async function GET() {
     console.error("Failed to fetch settings:", error);
     return NextResponse.json(
       { error: "Failed to fetch settings" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -68,7 +68,7 @@ export async function PUT(request: Request) {
     if (isNaN(requiredHours)) {
       return NextResponse.json(
         { error: "Invalid required hours value" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -81,8 +81,8 @@ export async function PUT(request: Request) {
         data: {
           requiredHours,
           studentName: body.studentName,
-          startDate: new Date(body.startDate),
-          endDate: new Date(body.endDate),
+          startDate: new Date(), // Use current date instead
+          endDate: new Date(), // Use current date instead
           userId: user.id,
         },
       });
@@ -94,8 +94,9 @@ export async function PUT(request: Request) {
       data: {
         requiredHours,
         studentName: body.studentName,
-        startDate: new Date(body.startDate),
-        endDate: new Date(body.endDate),
+        // Don't update startDate and endDate if they're not provided
+        ...(body.startDate && { startDate: new Date(body.startDate) }),
+        ...(body.endDate && { endDate: new Date(body.endDate) }),
       },
     });
 
@@ -104,7 +105,7 @@ export async function PUT(request: Request) {
     console.error("Failed to update settings:", error);
     return NextResponse.json(
       { error: "Failed to update settings" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
