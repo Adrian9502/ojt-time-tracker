@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Note } from "@/lib/types";
 import { toast } from "react-toastify";
@@ -15,6 +15,10 @@ interface NoteModalProps {
 interface FormData {
   title: string;
   content: string;
+  oooDate?: string;
+  oooTimeStart?: string;
+  oooTimeEnd?: string;
+  isOneDay?: boolean;
 }
 
 export default function NoteModal({
@@ -24,24 +28,58 @@ export default function NoteModal({
   onCancel,
 }: NoteModalProps) {
   const [loading, setLoading] = useState(false);
+  const [isOneDay, setIsOneDay] = useState(false);
 
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: note
       ? {
           title: note.title,
           content: note.content,
+          oooDate: note.oooDate
+            ? new Date(note.oooDate).toISOString().split("T")[0]
+            : undefined,
+          oooTimeStart: note.oooTimeStart || undefined,
+          oooTimeEnd: note.oooTimeEnd || undefined,
+          isOneDay: note.isOneDay || false,
         }
       : {
           title: "",
           content: "",
+          oooDate: undefined,
+          oooTimeStart: undefined,
+          oooTimeEnd: undefined,
+          isOneDay: false,
         },
   });
 
+  // Watch the isOneDay checkbox
+  const watchIsOneDay = watch("isOneDay");
+
+  // Update local state and set default times when checkbox changes
+  useEffect(() => {
+    if (watchIsOneDay) {
+      setIsOneDay(true);
+      // Set full day times (8:00 AM to 5:00 PM or your preferred work hours)
+      setValue("oooTimeStart", "08:00");
+      setValue("oooTimeEnd", "17:00");
+    } else {
+      setIsOneDay(false);
+    }
+  }, [watchIsOneDay, setValue]);
+
   const onSubmit = async (data: FormData) => {
+    // Validate that oooDate is set for OOO type
+    if (type === "ooo" && !data.oooDate) {
+      toast.error("Please select a date for the out-of-office");
+      return;
+    }
+
     setLoading(true);
     try {
       const url = note ? `/api/notes/${note.id}` : "/api/notes";
@@ -53,6 +91,7 @@ export default function NoteModal({
         body: JSON.stringify({
           ...data,
           type,
+          isOneDay: data.isOneDay || false,
         }),
       });
 
@@ -72,17 +111,18 @@ export default function NoteModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           {/* Header */}
           <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {note ? "Edit" : "Add"} {type === "regular" ? "Note" : "OOO Note"}
+              {note ? "Edit" : "Add"}{" "}
+              {type === "regular" ? "Note" : "Out of Office"}
             </h2>
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
               {type === "regular"
                 ? "Record important notes or reminders"
-                : "Track out-of-office time and reasons"}
+                : "Track your out-of-office time and details"}
             </p>
           </div>
 
@@ -90,7 +130,7 @@ export default function NoteModal({
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Title *
+                {type === "regular" ? "Title" : "Title of Out of Office"} *
               </label>
               <input
                 type="text"
@@ -99,7 +139,7 @@ export default function NoteModal({
                 placeholder={
                   type === "regular"
                     ? "e.g., Important Meeting Notes"
-                    : "e.g., Vacation Leave"
+                    : "e.g., Annual Leave, Sick Leave, Personal Day"
                 }
               />
               {errors.title && (
@@ -109,19 +149,107 @@ export default function NoteModal({
               )}
             </div>
 
-            {/* Content */}
+            {/* OOO-specific fields */}
+            {type === "ooo" && (
+              <>
+                {/* Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    Date *
+                  </label>
+                  <input
+                    type="date"
+                    {...register("oooDate", {
+                      required: type === "ooo" ? "Date is required" : false,
+                    })}
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-slate-900 dark:text-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                  {errors.oooDate && (
+                    <p className="text-red-500 dark:text-red-400 text-xs mt-1">
+                      {errors.oooDate.message}
+                    </p>
+                  )}
+
+                  {/* One Day Checkbox */}
+                  <div className="mt-2 flex items-center">
+                    <input
+                      type="checkbox"
+                      id="isOneDay"
+                      {...register("isOneDay")}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                    <label
+                      htmlFor="isOneDay"
+                      className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      1 Day OOO (Full work day)
+                    </label>
+                  </div>
+                  {/* {isOneDay && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      ℹ️ Time will be set to full work day (8:00 AM - 5:00 PM)
+                    </p>
+                  )} */}
+                </div>
+
+                {/* Time Range */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      Start Time *
+                    </label>
+                    <input
+                      type="time"
+                      {...register("oooTimeStart", {
+                        required:
+                          type === "ooo" ? "Start time is required" : false,
+                      })}
+                      disabled={isOneDay}
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-slate-900 dark:text-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    {errors.oooTimeStart && (
+                      <p className="text-red-500 dark:text-red-400 text-xs mt-1">
+                        {errors.oooTimeStart.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      End Time *
+                    </label>
+                    <input
+                      type="time"
+                      {...register("oooTimeEnd", {
+                        required:
+                          type === "ooo" ? "End time is required" : false,
+                      })}
+                      disabled={isOneDay}
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-slate-900 dark:text-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    {errors.oooTimeEnd && (
+                      <p className="text-red-500 dark:text-red-400 text-xs mt-1">
+                        {errors.oooTimeEnd.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Content/Reason */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Content *
+                {type === "regular" ? "Content" : "Reason"} *
               </label>
               <textarea
-                {...register("content", { required: "Content is required" })}
+                {...register("content", { required: "This field is required" })}
                 rows={6}
                 className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-slate-900 dark:text-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
                 placeholder={
                   type === "regular"
                     ? "Write your notes here..."
-                    : "Reason for out-of-office, dates, coverage details..."
+                    : "e.g., Family vacation, Medical appointment, Personal matters..."
                 }
               />
               {errors.content && (
@@ -146,7 +274,11 @@ export default function NoteModal({
                 disabled={loading}
                 className="flex-1 px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-sm hover:shadow-md"
               >
-                {loading ? "Saving..." : note ? "Update Note" : "Save Note"}
+                {loading
+                  ? "Saving..."
+                  : note
+                    ? `Update ${type === "regular" ? "Note" : "OOO"}`
+                    : `Save ${type === "regular" ? "Note" : "OOO"}`}
               </button>
             </div>
           </form>

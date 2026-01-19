@@ -1,22 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-
-interface TaskInput {
-  timeIn: string;
-  timeOut: string;
-  hoursRendered: number;
-  taskName: string;
-  category: string;
-  status: string;
-}
-
-interface EntryInput {
-  date: string;
-  supervisor: string;
-  notes?: string;
-  tasks: TaskInput[];
-}
+import { calculateTotalHours } from "@/lib/utils";
 
 export async function GET() {
   try {
@@ -36,20 +21,22 @@ export async function GET() {
 
     const entries = await prisma.oJTEntry.findMany({
       where: { userId: user.id },
+      include: { tasks: true },
       orderBy: { date: "desc" },
-      include: {
-        tasks: {
-          orderBy: { createdAt: "asc" },
-        },
-      },
     });
 
-    return NextResponse.json(entries);
+    // Recalculate totalHours to ensure accuracy
+    const entriesWithCalculatedHours = entries.map((entry) => ({
+      ...entry,
+      totalHours: calculateTotalHours(entry.tasks),
+    }));
+
+    return NextResponse.json(entriesWithCalculatedHours);
   } catch (error) {
     console.error("Failed to fetch entries:", error);
     return NextResponse.json(
       { error: "Failed to fetch entries" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -70,13 +57,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const body: EntryInput = await request.json();
+    const body = await request.json();
 
     // Calculate total hours from tasks
-    const totalHours = body.tasks.reduce(
-      (sum, task) => sum + task.hoursRendered,
-      0
-    );
+    const totalHours = calculateTotalHours(body.tasks);
 
     const entry = await prisma.oJTEntry.create({
       data: {
@@ -86,19 +70,10 @@ export async function POST(request: Request) {
         totalHours,
         userId: user.id,
         tasks: {
-          create: body.tasks.map((task) => ({
-            timeIn: task.timeIn,
-            timeOut: task.timeOut,
-            hoursRendered: task.hoursRendered,
-            taskName: task.taskName,
-            category: task.category,
-            status: task.status,
-          })),
+          create: body.tasks,
         },
       },
-      include: {
-        tasks: true,
-      },
+      include: { tasks: true },
     });
 
     return NextResponse.json(entry);
@@ -106,7 +81,7 @@ export async function POST(request: Request) {
     console.error("Failed to create entry:", error);
     return NextResponse.json(
       { error: "Failed to create entry" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

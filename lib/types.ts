@@ -55,6 +55,10 @@ export interface Note {
   content: string;
   type: "regular" | "ooo";
   userId: string;
+  oooDate?: Date;
+  oooTimeStart?: string;
+  oooTimeEnd?: string;
+  isOneDay?: boolean; // New field
   createdAt: Date;
   updatedAt: Date;
 }

@@ -115,15 +115,20 @@ model OJTSettings {
 }
 
 model Note {
-  id        String   @id @default(cuid())
-  title     String
-  content   String
-  type      String   // "regular" or "ooo"
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  title        String
+  content      String
+  type         String   // "regular" or "ooo"
+  oooDate      DateTime?
+  oooTimeStart String?
+  oooTimeEnd   String?
+  isOneDay     Boolean  @default(false) // New field
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([userId])
   @@index([type])
+  @@index([oooDate])
 }

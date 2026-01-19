@@ -1,26 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-
-interface TaskInput {
-  timeIn: string;
-  timeOut: string;
-  hoursRendered: number;
-  taskName: string;
-  category: string;
-  status: string;
-}
-
-interface EntryInput {
-  date: string;
-  supervisor: string;
-  notes?: string;
-  tasks: TaskInput[];
-}
+import { calculateTotalHours } from "@/lib/utils";
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -37,8 +22,8 @@ export async function PUT(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Await params
     const { id } = await params;
+    const body = await request.json();
 
     const existingEntry = await prisma.oJTEntry.findUnique({
       where: { id },
@@ -48,14 +33,9 @@ export async function PUT(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const body: EntryInput = await request.json();
+    // Calculate total hours from tasks
+    const totalHours = calculateTotalHours(body.tasks);
 
-    const totalHours = body.tasks.reduce(
-      (sum, task) => sum + task.hoursRendered,
-      0
-    );
-
-    // Delete existing tasks first
     await prisma.task.deleteMany({
       where: { entryId: id },
     });
@@ -68,19 +48,10 @@ export async function PUT(
         notes: body.notes,
         totalHours,
         tasks: {
-          create: body.tasks.map((task) => ({
-            timeIn: task.timeIn,
-            timeOut: task.timeOut,
-            hoursRendered: task.hoursRendered,
-            taskName: task.taskName,
-            category: task.category,
-            status: task.status,
-          })),
+          create: body.tasks,
         },
       },
-      include: {
-        tasks: true,
-      },
+      include: { tasks: true },
     });
 
     return NextResponse.json(entry);
@@ -88,14 +59,14 @@ export async function PUT(
     console.error("Failed to update entry:", error);
     return NextResponse.json(
       { error: "Failed to update entry" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -112,7 +83,6 @@ export async function DELETE(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Await params
     const { id } = await params;
 
     const existingEntry = await prisma.oJTEntry.findUnique({
@@ -132,7 +102,7 @@ export async function DELETE(
     console.error("Failed to delete entry:", error);
     return NextResponse.json(
       { error: "Failed to delete entry" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

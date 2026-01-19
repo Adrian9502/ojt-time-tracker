@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -37,6 +37,10 @@ export async function PUT(
       data: {
         title: body.title,
         content: body.content,
+        oooDate: body.oooDate ? new Date(body.oooDate) : null,
+        oooTimeStart: body.oooTimeStart || null,
+        oooTimeEnd: body.oooTimeEnd || null,
+        isOneDay: body.isOneDay || false,
       },
     });
 
@@ -45,14 +49,14 @@ export async function PUT(
     console.error("Failed to update note:", error);
     return NextResponse.json(
       { error: "Failed to update note" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -88,7 +92,7 @@ export async function DELETE(
     console.error("Failed to delete note:", error);
     return NextResponse.json(
       { error: "Failed to delete note" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -25,6 +25,7 @@ interface FlatTask {
   learningOutcome: string;
   isFirstOfDate: boolean;
   supervisor: string;
+  createdAt: Date;
 }
 
 export default function TaskTable({
@@ -44,14 +45,12 @@ export default function TaskTable({
     taskName: "",
   });
 
-  const flatTasks: FlatTask[] = [];
-  const sortedEntries = [...entries].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  );
+  // FIXED: Flatten all tasks first, then sort globally by createdAt
+  const allTasks: Omit<FlatTask, "isFirstOfDate">[] = [];
 
-  sortedEntries.forEach((entry) => {
-    entry.tasks.forEach((task, index) => {
-      flatTasks.push({
+  entries.forEach((entry) => {
+    entry.tasks.forEach((task) => {
+      allTasks.push({
         entryId: entry.id,
         taskId: task.id,
         date: entry.date,
@@ -62,10 +61,29 @@ export default function TaskTable({
         category: task.category,
         status: task.status,
         learningOutcome: entry.notes || "-",
-        isFirstOfDate: index === 0,
         supervisor: entry.supervisor,
+        createdAt: task.createdAt,
       });
     });
+  });
+
+  // Sort all tasks globally by createdAt (newest first)
+  const sortedTasks = allTasks.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+
+  // Mark first occurrence of each date
+  const seenDates = new Set<string>();
+  const flatTasks: FlatTask[] = sortedTasks.map((task) => {
+    const dateKey = new Date(task.date).toDateString();
+    const isFirstOfDate = !seenDates.has(dateKey);
+    if (isFirstOfDate) {
+      seenDates.add(dateKey);
+    }
+    return {
+      ...task,
+      isFirstOfDate,
+    };
   });
 
   const handleDeleteClick = (
@@ -100,9 +118,9 @@ export default function TaskTable({
 
   return (
     <>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-800">
+      <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
+        <table className="min-w-full divide-y divide-gray-200  dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-800 sticky z-10 top-0 ">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 Date
