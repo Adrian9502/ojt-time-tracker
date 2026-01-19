@@ -50,7 +50,7 @@ export default function Home() {
 
       const calculatedStats = calculateStats(
         loadedEntries,
-        settings.requiredHours
+        settings.requiredHours,
       );
 
       setEntries(loadedEntries);
@@ -127,7 +127,7 @@ export default function Home() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to delete task. Please try again."
+          : "Failed to delete task. Please try again.",
       );
     }
   };
@@ -141,10 +141,10 @@ export default function Home() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="flex flex-col items-center">
-          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-          <p className="text-gray-600 mt-4">Loading...</p>
+          <div className="w-12 h-12 border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
+          <p className="text-gray-600 dark:text-gray-400 mt-4">Loading...</p>
         </div>
       </div>
     );
@@ -156,53 +156,53 @@ export default function Home() {
 
   return (
     <>
-      <Header />
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <Header onSettingsUpdate={loadData} />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header Section */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
               Welcome back, {session?.user?.name?.split(" ")[0]}!
             </h1>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Track your on-the-job training hours
             </p>
           </div>
 
           {/* Stats Cards - Compact */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-              <div className="text-xs font-medium text-gray-500 mb-1">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-100 dark:border-gray-700">
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                 Completed Hours
               </div>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {formatHours(stats.completedHours)}
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-              <div className="text-xs font-medium text-gray-500 mb-1">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-100 dark:border-gray-700">
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                 Required Hours
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {stats.totalHours}
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-              <div className="text-xs font-medium text-gray-500 mb-1">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-100 dark:border-gray-700">
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                 Remaining
               </div>
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                 {formatHours(stats.remainingHours)}
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-              <div className="text-xs font-medium text-gray-500 mb-1">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-100 dark:border-gray-700">
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                 Progress
               </div>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {stats.progressPercentage.toFixed(1)}%
               </div>
             </div>
@@ -212,18 +212,18 @@ export default function Home() {
           <NotesSection />
 
           {/* Progress Bar - Compact */}
-          <div className="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-100">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-6 border border-gray-100 dark:border-gray-700">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-medium text-gray-600">
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
                 Overall Progress
               </span>
-              <span className="text-xs font-semibold text-gray-900">
+              <span className="text-xs font-semibold text-gray-900 dark:text-white">
                 {formatHours(stats.completedHours)} / {stats.totalHours} hours
               </span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-2">
+            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
               <div
-                className="bg-linear-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
+                className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all duration-500"
                 style={{ width: `${stats.progressPercentage}%` }}
               />
             </div>
@@ -237,13 +237,13 @@ export default function Home() {
             >
               + Add Task
             </button>
-            <button className="px-5 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors border border-gray-200 shadow-sm">
+            <button className="px-5 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 shadow-sm">
               📊 Export
             </button>
           </div>
 
           {/* Main Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             <TaskTable
               entries={entries}
               onDeleteTask={handleDeleteTask}

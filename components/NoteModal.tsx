@@ -59,7 +59,7 @@ export default function NoteModal({
       if (!response.ok) throw new Error("Failed to save note");
 
       toast.success(
-        note ? "Note updated successfully!" : "Note added successfully!"
+        note ? "Note updated successfully!" : "Note added successfully!",
       );
       onSuccess();
     } catch (error) {
@@ -72,14 +72,14 @@ export default function NoteModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full">
         <div className="p-6">
           {/* Header */}
-          <div className="mb-6 pb-4 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">
+          <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               {note ? "Edit" : "Add"} {type === "regular" ? "Note" : "OOO Note"}
             </h2>
-            <p className="text-gray-500 text-sm mt-1">
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
               {type === "regular"
                 ? "Record important notes or reminders"
                 : "Track out-of-office time and reasons"}
@@ -89,13 +89,13 @@ export default function NoteModal({
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Title *
               </label>
               <input
                 type="text"
                 {...register("title", { required: "Title is required" })}
-                className="w-full px-4 py-2.5 border border-gray-300 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-slate-900 dark:text-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder={
                   type === "regular"
                     ? "e.g., Important Meeting Notes"
@@ -103,7 +103,7 @@ export default function NoteModal({
                 }
               />
               {errors.title && (
-                <p className="text-red-500 text-xs mt-1">
+                <p className="text-red-500 dark:text-red-400 text-xs mt-1">
                   {errors.title.message}
                 </p>
               )}
@@ -111,13 +111,13 @@ export default function NoteModal({
 
             {/* Content */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Content *
               </label>
               <textarea
                 {...register("content", { required: "Content is required" })}
                 rows={6}
-                className="w-full px-4 py-2.5 border border-gray-300 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-slate-900 dark:text-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
                 placeholder={
                   type === "regular"
                     ? "Write your notes here..."
@@ -125,19 +125,19 @@ export default function NoteModal({
                 }
               />
               {errors.content && (
-                <p className="text-red-500 text-xs mt-1">
+                <p className="text-red-500 dark:text-red-400 text-xs mt-1">
                   {errors.content.message}
                 </p>
               )}
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 pt-4 border-t border-gray-200">
+            <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
                 onClick={onCancel}
                 disabled={loading}
-                className="px-6 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 disabled:cursor-not-allowed transition-colors"
+                className="px-6 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:cursor-not-allowed transition-colors"
               >
                 Cancel
               </button>

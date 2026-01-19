@@ -80,7 +80,7 @@ export default function NotesSection() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 mb-6">
       {/* Tabs */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex gap-2 rounded-lg">
@@ -89,7 +89,7 @@ export default function NotesSection() {
             className={`px-6 py-2 text-sm font-medium rounded-md transition-all ${
               activeTab === "regular"
                 ? "bg-blue-600 text-white shadow-sm"
-                : "text-gray-600 hover:text-gray-900 bg-slate-100"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 bg-slate-100 dark:bg-gray-700"
             }`}
           >
             Notes
@@ -99,7 +99,7 @@ export default function NotesSection() {
             className={`px-6 py-2 text-sm font-medium rounded-md transition-all ${
               activeTab === "ooo"
                 ? "shadow-sm bg-blue-600 text-white"
-                : "text-gray-600 hover:text-gray-900 bg-slate-100"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 bg-slate-100 dark:bg-gray-700"
             }`}
           >
             OOO Notes
@@ -114,14 +114,14 @@ export default function NotesSection() {
         </button>
       </div>
 
-      {/* Notes Grid with Horizontal Scroll */}
+      {/* Notes Grid */}
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
         </div>
       ) : notes.length === 0 ? (
         <div className="text-center py-12">
-          <div className="text-gray-400 mb-2">
+          <div className="text-gray-400 dark:text-gray-600 mb-2">
             <svg
               className="w-12 h-12 mx-auto"
               fill="none"
@@ -136,10 +136,10 @@ export default function NotesSection() {
               />
             </svg>
           </div>
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
             No {activeTab === "regular" ? "notes" : "OOO notes"} yet
           </p>
-          <p className="text-gray-400 text-xs mt-1">
+          <p className="text-gray-400 dark:text-gray-600 text-xs mt-1">
             Click &quot;Add {activeTab === "regular" ? "Note" : "OOO Note"}
             &quot; to get started
           </p>
@@ -150,28 +150,30 @@ export default function NotesSection() {
             {notes.map((note) => (
               <div
                 key={note.id}
-                className="shrink-0 w-72 bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-100 p-5 hover:shadow-md transition-all"
+                className="shrink-0 w-72 bg-blue-50 dark:bg-gray-700 rounded-xl border-2 border-blue-100 dark:border-gray-600 p-5 hover:shadow-md transition-all"
               >
-                {/* Header with Edit/Delete */}
+                {/* Header */}
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
+                    <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-1">
                       <span className="font-medium">
                         {formatDate(new Date(note.createdAt))}
                       </span>
-                      <span className="text-gray-400">•</span>
-                      <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                      <span className="text-gray-400 dark:text-gray-600">
+                        •
+                      </span>
+                      <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full font-medium">
                         {getDayOfWeek(new Date(note.createdAt))}
                       </span>
                     </div>
-                    <h3 className="text-base font-bold text-gray-900 line-clamp-1">
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white line-clamp-1">
                       {note.title}
                     </h3>
                   </div>
                   <div className="flex gap-1 ml-2">
                     <button
                       onClick={() => handleEditNote(note)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                      className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                       title="Edit note"
                     >
                       <svg
@@ -190,7 +192,7 @@ export default function NotesSection() {
                     </button>
                     <button
                       onClick={() => handleDeleteClick(note.id, note.title)}
-                      className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                      className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                       title="Delete note"
                     >
                       <svg
@@ -211,7 +213,7 @@ export default function NotesSection() {
                 </div>
 
                 {/* Content */}
-                <p className="text-sm text-gray-700 line-clamp-4 whitespace-pre-wrap">
+                <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-4 whitespace-pre-wrap">
                   {note.content}
                 </p>
               </div>

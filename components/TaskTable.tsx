@@ -44,10 +44,9 @@ export default function TaskTable({
     taskName: "",
   });
 
-  // Flatten all tasks and group by date
   const flatTasks: FlatTask[] = [];
   const sortedEntries = [...entries].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 
   sortedEntries.forEach((entry) => {
@@ -72,7 +71,7 @@ export default function TaskTable({
   const handleDeleteClick = (
     entryId: string,
     taskId: string,
-    taskName: string
+    taskName: string,
   ) => {
     setConfirmModal({
       isOpen: true,
@@ -102,90 +101,85 @@ export default function TaskTable({
   return (
     <>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 Task
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 Time
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 Hours
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 Category
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 Learning Outcome
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-100">
+          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
             {flatTasks.map((task) => (
               <tr
                 key={`${task.entryId}-${task.taskId}`}
-                className="hover:bg-gray-50 transition-colors"
+                className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
-                {/* Date - only show for first task of the day */}
                 <td className="px-6 py-4 whitespace-nowrap">
                   {task.isFirstOfDate ? (
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {formatDate(new Date(task.date))}
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-400">↳</div>
+                    <div className="text-sm text-gray-400 dark:text-gray-600">
+                      ↳
+                    </div>
                   )}
                 </td>
 
-                {/* Task Name */}
                 <td className="px-6 py-4">
-                  <div className="text-sm text-gray-900 font-medium">
+                  <div className="text-sm text-gray-900 dark:text-gray-100 font-medium">
                     {task.taskName}
                   </div>
                 </td>
 
-                {/* Time Range */}
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
                     {task.timeIn} - {task.timeOut}
                   </div>
                 </td>
 
-                {/* Hours */}
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-semibold text-blue-600">
+                  <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">
                     {formatHours(task.hoursRendered)} hrs
                   </div>
                 </td>
 
-                {/* Category */}
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-medium rounded-full bg-blue-50 text-blue-700">
+                  <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-medium rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
                     {task.category}
                   </span>
                 </td>
 
-                {/* Learning Outcome */}
                 <td className="px-6 py-4">
-                  <div className="text-sm text-gray-600 max-w-xs truncate">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
                     {task.learningOutcome}
                   </div>
                 </td>
 
-                {/* Actions */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <div className="flex gap-3">
                     <button
                       onClick={() => handleEditClick(task.entryId, task.taskId)}
-                      className="text-blue-600 hover:text-blue-800 font-medium"
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
                     >
                       Edit
                     </button>
@@ -194,10 +188,10 @@ export default function TaskTable({
                         handleDeleteClick(
                           task.entryId,
                           task.taskId,
-                          task.taskName
+                          task.taskName,
                         )
                       }
-                      className="text-red-600 hover:text-red-800 font-medium"
+                      className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium"
                     >
                       Delete
                     </button>
@@ -209,8 +203,8 @@ export default function TaskTable({
         </table>
 
         {flatTasks.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-2">
+          <div className="text-center py-12 bg-white dark:bg-gray-900">
+            <div className="text-gray-400 dark:text-gray-600 mb-2">
               <svg
                 className="w-12 h-12 mx-auto"
                 fill="none"
@@ -225,8 +219,10 @@ export default function TaskTable({
                 />
               </svg>
             </div>
-            <p className="text-gray-500 text-sm">No tasks recorded yet</p>
-            <p className="text-gray-400 text-xs mt-1">
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              No tasks recorded yet
+            </p>
+            <p className="text-gray-400 dark:text-gray-600 text-xs mt-1">
               Click &quot;Add Task&quot; to get started
             </p>
           </div>

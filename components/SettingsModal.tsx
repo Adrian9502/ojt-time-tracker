@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 
 interface SettingsModalProps {
   onSuccess: () => void;
@@ -38,6 +39,7 @@ export default function SettingsModal({
         }
       } catch (error) {
         console.error("Failed to load settings:", error);
+        toast.error("Failed to load settings");
       } finally {
         setInitialLoading(false);
       }
@@ -61,18 +63,14 @@ export default function SettingsModal({
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to save settings");
+        throw new Error("Failed to update settings");
       }
 
-      onSuccess();
+      toast.success("Settings updated successfully!");
+      onSuccess(); // This will trigger the parent to reload data
     } catch (error) {
-      console.error("Error saving settings:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Failed to save settings. Please try again."
-      );
+      console.error("Failed to update settings:", error);
+      toast.error("Failed to update settings. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -80,11 +78,13 @@ export default function SettingsModal({
 
   if (initialLoading) {
     return (
-      <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-          <div className="flex flex-col items-center justify-center py-32">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8">
+          <div className="flex flex-col items-center">
             <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-            <p className="text-gray-600 mt-4">Loading settings...</p>
+            <p className="text-gray-600 dark:text-gray-300 mt-4">
+              Loading settings...
+            </p>
           </div>
         </div>
       </div>
@@ -92,17 +92,17 @@ export default function SettingsModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
         <div className="p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4 text-center">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
             OJT Settings
           </h2>
 
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Required Hours */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Required OJT Hours *
               </label>
               <input
@@ -113,7 +113,7 @@ export default function SettingsModal({
                   min: { value: 1, message: "Must be at least 1 hour" },
                   valueAsNumber: true,
                 })}
-                className="w-full px-3 py-2 border border-gray-300 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 text-slate-900 dark:text-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., 500"
               />
               {errors.requiredHours && (
@@ -125,7 +125,7 @@ export default function SettingsModal({
 
             {/* Student Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Student Name *
               </label>
               <input
@@ -133,7 +133,7 @@ export default function SettingsModal({
                 {...register("studentName", {
                   required: "Student name is required",
                 })}
-                className="w-full px-3 py-2 border border-gray-300 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 text-slate-900 dark:text-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Your full name"
               />
               {errors.studentName && (
@@ -143,63 +143,25 @@ export default function SettingsModal({
               )}
             </div>
 
-            {/* Date Range */}
-            {/* <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Date *
-                </label>
-                <input
-                  type="date"
-                  {...register("startDate", {
-                    required: "Start date is required",
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                {errors.startDate && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.startDate.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  End Date *
-                </label>
-                <input
-                  type="date"
-                  {...register("endDate", { required: "End date is required" })}
-                  className="w-full px-3 py-2 border border-gray-300 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                {errors.endDate && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.endDate.message}
-                  </p>
-                )}
-              </div>
-            </div> */}
-
             {/* Actions */}
             <div className="flex gap-3 pt-4">
               <button
                 type="button"
-                onClick={handleSubmit(onSubmit)}
-                disabled={loading}
-                className="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                {loading ? "Saving..." : "Save Settings"}
-              </button>
-              <button
-                type="button"
                 onClick={onCancel}
                 disabled={loading}
-                className="px-6 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:cursor-not-allowed transition-colors"
               >
                 Cancel
               </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading ? "Saving..." : "Save Settings"}
+              </button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>
