@@ -158,9 +158,12 @@ export default function Sidebar({ onSettingsClick }: SidebarProps) {
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
             {!isCollapsed && (
               <div className="flex items-center bg-linear-to-br bg-clip-text from-blue-600 to-indigo-600 rounded-lg justify-center">
-                <span className="font-bold text-gray-900 dark:text-white text-md">
+                <Link
+                  href="/"
+                  className="font-bold text-gray-900 dark:text-white text-md"
+                >
                   OJT Time Tracker
-                </span>
+                </Link>
               </div>
             )}
             <button
