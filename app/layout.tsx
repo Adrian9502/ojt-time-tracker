@@ -5,7 +5,7 @@ import SessionProvider from "@/components/SessionProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import { Analytics } from "@vercel/analytics/next";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -51,6 +51,7 @@ export default function RootLayout({
             theme="colored"
           />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
