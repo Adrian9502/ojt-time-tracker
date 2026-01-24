@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { OJTEntry, OJTStats } from "@/lib/types";
 import { calculateStats } from "@/lib/store";
-import { formatHours } from "@/lib/utils";
+import { formatHours, formatHoursMinutes } from "@/lib/utils";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "react-toastify";
 
@@ -296,7 +296,7 @@ export default function ReportsPage() {
                             {category}
                           </span>
                           <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white whitespace-nowrap">
-                            {formatHours(hours)} hrs
+                            {formatHoursMinutes(hours)}
                             <span className="hidden sm:inline text-gray-500 dark:text-gray-400 ml-1">
                               ({percentage.toFixed(1)}%)
                             </span>

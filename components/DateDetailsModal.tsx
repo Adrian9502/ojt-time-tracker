@@ -1,7 +1,7 @@
 "use client";
 
 import { OJTEntry } from "@/lib/types";
-import { formatHours } from "@/lib/utils";
+import { formatHoursMinutes } from "@/lib/utils";
 
 interface DateDetailsModalProps {
   isOpen: boolean;
@@ -59,7 +59,7 @@ export default function DateDetailsModal({
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
                 {sortedTasks.length}{" "}
                 {sortedTasks.length === 1 ? "task" : "tasks"} •{" "}
-                {formatHours(totalHours)} hours total
+                {formatHoursMinutes(totalHours)} hours total
               </p>
             </div>
             <button
@@ -155,7 +155,7 @@ export default function DateDetailsModal({
                         Duration
                       </p>
                       <p className="text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400">
-                        {formatHours(task.hoursRendered)} hrs
+                        {formatHoursMinutes(task.hoursRendered)} hrs
                       </p>
                     </div>
                   </div>
@@ -185,7 +185,7 @@ export default function DateDetailsModal({
                 Total Hours for This Day
               </p>
               <p className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-0.5 sm:mt-1">
-                {formatHours(totalHours)} hours
+                {formatHoursMinutes(totalHours)} hours
               </p>
             </div>
             <button

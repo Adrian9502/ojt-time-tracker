@@ -319,7 +319,7 @@ export default function Sidebar({ onSettingsClick }: SidebarProps) {
                   </div>
                 )}
                 {!isCollapsed && (
-                  <div className="flex-1 text-left">
+                  <div className="flex-1 text-left min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {session.user.name}
                     </p>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { OJTEntry } from "@/lib/types";
 import { CATEGORIES } from "@/lib/constants";
-import { calculateHours } from "@/lib/utils";
+import { calculateHours, formatHoursMinutes } from "@/lib/utils";
 import { toast } from "react-toastify";
 
 interface EntryFormProps {
@@ -247,7 +247,7 @@ export default function EntryForm({
                     </span>
                   </div>
                   <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {hoursRendered.toFixed(2)} hrs
+                    {formatHoursMinutes(hoursRendered)}
                   </span>
                 </div>
               </div>

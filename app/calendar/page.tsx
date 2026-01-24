@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { OJTEntry } from "@/lib/types";
 import DashboardLayout from "@/components/DashboardLayout";
 import DateDetailsModal from "@/components/DateDetailsModal";
-import { formatHours } from "@/lib/utils";
+import { formatHoursMinutes } from "@/lib/utils";
 import { toast } from "react-toastify";
 
 export default function CalendarPage() {
@@ -237,8 +237,9 @@ export default function CalendarPage() {
                     </div>
                     {dayData && (
                       <>
+                        {/* UPDATED: Show hrs-min format */}
                         <div className="text-[9px] sm:text-xs font-semibold text-green-600 dark:text-green-400">
-                          {formatHours(dayData.totalHours)}h
+                          {formatHoursMinutes(dayData.totalHours)}
                         </div>
                         {hasEntries && (
                           <div className="hidden sm:block text-[9px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">

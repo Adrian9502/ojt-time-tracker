@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 import { OJTEntry } from "./types";
+import { formatHoursMinutes } from "./utils";
 
 interface ExportTask {
   Date: string;
@@ -7,7 +8,7 @@ interface ExportTask {
   Task: string;
   "Time In": string;
   "Time Out": string;
-  "Hours Rendered": number;
+  "Hours Rendered": string; // Changed from number to string
   Category: string;
   "Learning Outcome": string;
   "Created At": string;
@@ -29,16 +30,28 @@ export function exportToExcel(
   entries: OJTEntry[],
   filename: string = "OJT_Time_Logs",
 ) {
-  // Prepare data with proper grouping
-  const exportData: (ExportTask | DateSummary)[] = [];
+  // Group entries by date
+  const entriesByDate: { [key: string]: OJTEntry[] } = {};
 
-  // Sort entries by date (newest first)
-  const sortedEntries = [...entries].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  entries.forEach((entry) => {
+    const dateKey = new Date(entry.date).toDateString();
+    if (!entriesByDate[dateKey]) {
+      entriesByDate[dateKey] = [];
+    }
+    entriesByDate[dateKey].push(entry);
+  });
+
+  // Sort dates (newest first)
+  const sortedDates = Object.keys(entriesByDate).sort(
+    (a, b) => new Date(b).getTime() - new Date(a).getTime(),
   );
 
-  sortedEntries.forEach((entry) => {
-    const dateObj = new Date(entry.date);
+  const exportData: (ExportTask | DateSummary)[] = [];
+
+  // Process each date
+  sortedDates.forEach((dateKey) => {
+    const dateEntries = entriesByDate[dateKey];
+    const dateObj = new Date(dateKey);
     const dateStr = dateObj.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -46,14 +59,39 @@ export function exportToExcel(
     });
     const dayStr = dateObj.toLocaleDateString("en-US", { weekday: "long" });
 
-    // Sort tasks by createdAt (newest first) within each entry
-    const sortedTasks = [...entry.tasks].sort(
+    // Collect all tasks for this date
+    const allTasks: Array<{
+      taskName: string;
+      timeIn: string;
+      timeOut: string;
+      hoursRendered: number;
+      category: string;
+      learningOutcome: string;
+      createdAt: Date;
+    }> = [];
+
+    dateEntries.forEach((entry) => {
+      entry.tasks.forEach((task) => {
+        allTasks.push({
+          taskName: task.taskName,
+          timeIn: task.timeIn,
+          timeOut: task.timeOut,
+          hoursRendered: task.hoursRendered,
+          category: task.category,
+          learningOutcome: entry.notes || "-",
+          createdAt: task.createdAt,
+        });
+      });
+    });
+
+    // Sort tasks by createdAt (newest first)
+    allTasks.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
     // Add each task as a row
-    sortedTasks.forEach((task) => {
+    allTasks.forEach((task) => {
       const createdAtDate = new Date(task.createdAt);
       const createdAtStr = createdAtDate.toLocaleString("en-US", {
         month: "short",
@@ -70,21 +108,27 @@ export function exportToExcel(
         Task: task.taskName,
         "Time In": task.timeIn,
         "Time Out": task.timeOut,
-        "Hours Rendered": Number(task.hoursRendered.toFixed(2)),
+        "Hours Rendered": formatHoursMinutes(task.hoursRendered), // UPDATED
         Category: task.category,
-        "Learning Outcome": entry.notes || "-",
+        "Learning Outcome": task.learningOutcome,
         "Created At": createdAtStr,
       });
     });
+
+    // Calculate total hours for this date
+    const totalHours = allTasks.reduce(
+      (sum, task) => sum + task.hoursRendered,
+      0,
+    );
 
     // Add total row for the date
     exportData.push({
       Date: "",
       Day: "",
-      Task: "TOTAL FOR " + dateStr,
+      Task: `TOTAL FOR ${dateStr}`,
       "Time In": "",
       "Time Out": "",
-      "Hours Rendered": `${entry.totalHours.toFixed(2)} hrs`,
+      "Hours Rendered": formatHoursMinutes(totalHours), // UPDATED
       Category: "",
       "Learning Outcome": "",
       "Created At": "",
@@ -114,7 +158,7 @@ export function exportToExcel(
     Task: "GRAND TOTAL",
     "Time In": "",
     "Time Out": "",
-    "Hours Rendered": `${grandTotal.toFixed(2)} hrs`,
+    "Hours Rendered": formatHoursMinutes(grandTotal), // UPDATED
     Category: "",
     "Learning Outcome": "",
     "Created At": "",
@@ -127,12 +171,12 @@ export function exportToExcel(
   ws["!cols"] = [
     { wch: 15 }, // Date
     { wch: 12 }, // Day
-    { wch: 35 }, // Task
+    { wch: 40 }, // Task
     { wch: 10 }, // Time In
     { wch: 10 }, // Time Out
     { wch: 15 }, // Hours Rendered
     { wch: 20 }, // Category
-    { wch: 40 }, // Learning Outcome
+    { wch: 50 }, // Learning Outcome
     { wch: 20 }, // Created At
   ];
 
@@ -152,7 +196,6 @@ export function exportToCSV(
   entries: OJTEntry[],
   filename: string = "OJT_Time_Logs",
 ) {
-  // Prepare CSV data
   const csvRows: string[] = [];
 
   // Add header
@@ -160,13 +203,26 @@ export function exportToCSV(
     "Date,Day,Task,Time In,Time Out,Hours Rendered,Category,Learning Outcome,Created At",
   );
 
-  // Sort entries by date (newest first)
-  const sortedEntries = [...entries].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  // Group entries by date
+  const entriesByDate: { [key: string]: OJTEntry[] } = {};
+
+  entries.forEach((entry) => {
+    const dateKey = new Date(entry.date).toDateString();
+    if (!entriesByDate[dateKey]) {
+      entriesByDate[dateKey] = [];
+    }
+    entriesByDate[dateKey].push(entry);
+  });
+
+  // Sort dates (newest first)
+  const sortedDates = Object.keys(entriesByDate).sort(
+    (a, b) => new Date(b).getTime() - new Date(a).getTime(),
   );
 
-  sortedEntries.forEach((entry) => {
-    const dateObj = new Date(entry.date);
+  // Process each date
+  sortedDates.forEach((dateKey) => {
+    const dateEntries = entriesByDate[dateKey];
+    const dateObj = new Date(dateKey);
     const dateStr = dateObj.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -174,14 +230,39 @@ export function exportToCSV(
     });
     const dayStr = dateObj.toLocaleDateString("en-US", { weekday: "long" });
 
+    // Collect all tasks for this date
+    const allTasks: Array<{
+      taskName: string;
+      timeIn: string;
+      timeOut: string;
+      hoursRendered: number;
+      category: string;
+      learningOutcome: string;
+      createdAt: Date;
+    }> = [];
+
+    dateEntries.forEach((entry) => {
+      entry.tasks.forEach((task) => {
+        allTasks.push({
+          taskName: task.taskName,
+          timeIn: task.timeIn,
+          timeOut: task.timeOut,
+          hoursRendered: task.hoursRendered,
+          category: task.category,
+          learningOutcome: entry.notes || "-",
+          createdAt: task.createdAt,
+        });
+      });
+    });
+
     // Sort tasks by createdAt (newest first)
-    const sortedTasks = [...entry.tasks].sort(
+    allTasks.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
     // Add each task
-    sortedTasks.forEach((task) => {
+    allTasks.forEach((task) => {
       const createdAtDate = new Date(task.createdAt);
       const createdAtStr = createdAtDate.toLocaleString("en-US", {
         month: "short",
@@ -192,16 +273,23 @@ export function exportToCSV(
         hour12: true,
       });
 
-      const learningOutcome = (entry.notes || "-").replace(/,/g, ";"); // Replace commas to avoid CSV issues
+      const learningOutcome = task.learningOutcome.replace(/,/g, ";"); // Replace commas to avoid CSV issues
+      const taskName = task.taskName.replace(/,/g, ";");
 
       csvRows.push(
-        `"${dateStr}","${dayStr}","${task.taskName}","${task.timeIn}","${task.timeOut}",${task.hoursRendered.toFixed(2)},"${task.category}","${learningOutcome}","${createdAtStr}"`,
+        `"${dateStr}","${dayStr}","${taskName}","${task.timeIn}","${task.timeOut}","${formatHoursMinutes(task.hoursRendered)}","${task.category}","${learningOutcome}","${createdAtStr}"`, // UPDATED
       );
     });
 
+    // Calculate total hours for this date
+    const totalHours = allTasks.reduce(
+      (sum, task) => sum + task.hoursRendered,
+      0,
+    );
+
     // Add total row
     csvRows.push(
-      `"","","TOTAL FOR ${dateStr}","","",${entry.totalHours.toFixed(2)} hrs,"","",""`,
+      `"","","TOTAL FOR ${dateStr}","","","${formatHoursMinutes(totalHours)}","","",""`, // UPDATED
     );
 
     // Add empty row
@@ -211,7 +299,7 @@ export function exportToCSV(
   // Add grand total
   const grandTotal = entries.reduce((sum, entry) => sum + entry.totalHours, 0);
   csvRows.push(
-    `"","","GRAND TOTAL","","",${grandTotal.toFixed(2)} hrs,"","",""`,
+    `"","","GRAND TOTAL","","","${formatHoursMinutes(grandTotal)}","","",""`, // UPDATED
   );
 
   // Create blob and download
