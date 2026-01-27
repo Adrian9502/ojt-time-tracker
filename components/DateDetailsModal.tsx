@@ -155,7 +155,7 @@ export default function DateDetailsModal({
                         Duration
                       </p>
                       <p className="text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400">
-                        {formatHoursMinutes(task.hoursRendered)} hrs
+                        {formatHoursMinutes(task.hoursRendered)}
                       </p>
                     </div>
                   </div>
